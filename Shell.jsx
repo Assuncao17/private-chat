@@ -3,18 +3,13 @@ import { tr } from "./i18n.js";
 import Icon from "./Icon.jsx";
 import Profile from "./Profile.jsx";
 import Admin from "./Admin.jsx";
-
-function Empty({ title, body }) {
-  return (
-    <div className="empty">
-      <h2>{title}</h2>
-      <p className="muted">{body}</p>
-    </div>
-  );
-}
+import Chats from "./Chats.jsx";
+import Chat from "./Chat.jsx";
+import Contacts from "./Contacts.jsx";
 
 export default function Shell({ profile, setProfile, theme }) {
   const [tab, setTab] = useState("chats");
+  const [open, setOpen] = useState(null); // conversa aberta
 
   const tabs = [
     { id: "chats", icon: "chat", label: tr("tab.chats") },
@@ -24,6 +19,8 @@ export default function Shell({ profile, setProfile, theme }) {
   ];
   const current = tabs.find((t) => t.id === tab);
 
+  if (open) return <Chat conv={open} profile={profile} onBack={() => setOpen(null)} />;
+
   return (
     <div className="shell">
       <header className="topbar">
@@ -31,10 +28,8 @@ export default function Shell({ profile, setProfile, theme }) {
       </header>
 
       <main className="content">
-        {tab === "chats" && <Empty title={tr("chats.emptyTitle")} body={tr("chats.emptyBody")} />}
-        {tab === "contacts" && (
-          <Empty title={tr("contacts.emptyTitle")} body={tr("contacts.emptyBody")} />
-        )}
+        {tab === "chats" && <Chats onOpen={setOpen} />}
+        {tab === "contacts" && <Contacts profile={profile} onOpen={setOpen} />}
         {tab === "admin" && <Admin profile={profile} />}
         {tab === "profile" && <Profile profile={profile} setProfile={setProfile} theme={theme} />}
       </main>

@@ -8,6 +8,8 @@ const paths = {
       <path d="M16 3.13a4 4 0 0 1 0 7.75" />
     </>
   ),
+  back: <path d="M15 18l-6-6 6-6" />,
+  send: <path d="M22 2L11 13M22 2l-7 20-4-9-9-4z" />,
   shield: <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />,
   user: (
     <>

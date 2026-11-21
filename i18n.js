@@ -19,6 +19,7 @@ const dict = {
     "err.credentials": "Email ou palavra-passe incorretos.",
     "err.load": "Não foi possível carregar os dados. Tenta outra vez.",
     "err.save": "Não foi possível guardar. Tenta outra vez.",
+    "err.send": "Não foi possível enviar a mensagem. Tenta outra vez.",
 
     "setup.title": "Falta ligar ao Supabase",
     "setup.body": "Cria um ficheiro .env com o endereço do projeto e a chave publicável, e reinicia a app.",
@@ -32,9 +33,16 @@ const dict = {
     "tab.profile": "Perfil",
 
     "chats.emptyTitle": "Ainda sem conversas",
-    "chats.emptyBody": "As conversas vão aparecer aqui assim que estiverem ativas.",
+    "chats.emptyBody": "Abre um contacto para começar uma conversa.",
+    "chats.noMessages": "Sem mensagens",
+    "chat.back": "Voltar",
+    "chat.empty": "Ainda sem mensagens. Diz olá!",
+    "chat.placeholder": "Escreve uma mensagem",
+    "chat.send": "Enviar",
+    "chat.delete": "Eliminar",
+    "chat.deleted": "Mensagem eliminada",
     "contacts.emptyTitle": "Contactos",
-    "contacts.emptyBody": "A lista de pessoas do grupo aparece aqui na próxima etapa.",
+    "contacts.emptyBody": "Ainda não há mais ninguém no grupo. Cria um convite no separador Admin.",
 
     "profile.name": "Nome",
     "profile.save": "Guardar nome",

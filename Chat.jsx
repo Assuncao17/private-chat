@@ -1,0 +1,153 @@
+import { useEffect, useRef, useState } from "react";
+import { supabase } from "./supabase.js";
+import { tr } from "./i18n.js";
+import Icon from "./Icon.jsx";
+
+const COLS = "id, sender_id, body, created_at, deleted_at";
+
+const hhmm = (iso) =>
+  new Date(iso).toLocaleTimeString("pt-PT", { hour: "2-digit", minute: "2-digit" });
+
+export default function Chat({ conv, profile, onBack }) {
+  const [messages, setMessages] = useState([]);
+  const [names, setNames] = useState({});
+  const [text, setText] = useState("");
+  const [error, setError] = useState("");
+  const [selected, setSelected] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const endRef = useRef(null);
+
+  useEffect(() => {
+    let alive = true;
+    const markRead = () => supabase.rpc("mark_read", { cid: conv.id });
+
+    (async () => {
+      const [m, p] = await Promise.all([
+        supabase
+          .from("messages")
+          .select(COLS)
+          .eq("conversation_id", conv.id)
+          .order("created_at", { ascending: false })
+          .limit(200),
+        supabase.from("profiles").select("id, display_name"),
+      ]);
+      if (!alive) return;
+      if (m.error) setError(tr("err.load"));
+      else setMessages(m.data.reverse());
+      if (p.data) setNames(Object.fromEntries(p.data.map((x) => [x.id, x.display_name])));
+      setLoading(false);
+      markRead();
+    })();
+
+    const filter = `conversation_id=eq.${conv.id}`;
+    const channel = supabase
+      .channel(`chat-${conv.id}`)
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "messages", filter }, ({ new: row }) => {
+        setMessages((cur) => (cur.some((x) => x.id === row.id) ? cur : [...cur, row]));
+        markRead();
+      })
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "messages", filter }, ({ new: row }) => {
+        setMessages((cur) => cur.map((x) => (x.id === row.id ? { ...x, ...row } : x)));
+      })
+      .subscribe();
+
+    return () => {
+      alive = false;
+      supabase.removeChannel(channel);
+    };
+  }, [conv.id]);
+
+  useEffect(() => {
+    endRef.current?.scrollIntoView({ block: "end" });
+  }, [messages.length, loading]);
+
+  async function send(e) {
+    e.preventDefault();
+    const body = text.trim();
+    if (!body) return;
+    setText("");
+    setError("");
+    const { data, error } = await supabase
+      .from("messages")
+      .insert({ conversation_id: conv.id, sender_id: profile.id, body })
+      .select(COLS)
+      .single();
+    if (error) {
+      setText(body);
+      return setError(tr("err.send"));
+    }
+    setMessages((cur) => (cur.some((x) => x.id === data.id) ? cur : [...cur, data]));
+  }
+
+  async function remove(id) {
+    setSelected(null);
+    const when = new Date().toISOString();
+    const { error } = await supabase.from("messages").update({ deleted_at: when }).eq("id", id);
+    if (error) return setError(tr("err.save"));
+    setMessages((cur) => cur.map((x) => (x.id === id ? { ...x, deleted_at: when } : x)));
+  }
+
+  return (
+    <div className="shell chat">
+      <header className="chat-head">
+        <button className="icon-btn" onClick={onBack} aria-label={tr("chat.back")}>
+          <Icon name="back" />
+        </button>
+        <span className="avatar">{(conv.title || "?").slice(0, 1).toUpperCase()}</span>
+        <h1>{conv.title}</h1>
+      </header>
+
+      <main className="messages">
+        {!loading && messages.length === 0 && (
+          <p className="muted center-text">{tr("chat.empty")}</p>
+        )}
+        {messages.map((m) => {
+          const mine = m.sender_id === profile.id;
+          const deleted = Boolean(m.deleted_at);
+          return (
+            <div key={m.id} className={`msg ${mine ? "mine" : "theirs"}`}>
+              {conv.kind === "group" && !mine && (
+                <small className="sender">{names[m.sender_id] || "—"}</small>
+              )}
+              <div
+                className={`bubble ${deleted ? "gone" : ""}`}
+                onClick={() => mine && !deleted && setSelected(selected === m.id ? null : m.id)}
+              >
+                {deleted ? tr("chat.deleted") : m.body}
+              </div>
+              <small className="time">
+                {hhmm(m.created_at)}
+                {selected === m.id && (
+                  <button className="link danger" onClick={() => remove(m.id)}>
+                    {tr("chat.delete")}
+                  </button>
+                )}
+              </small>
+            </div>
+          );
+        })}
+        <div ref={endRef} />
+      </main>
+
+      {error && (
+        <p className="error chat-error" role="alert">
+          {error}
+        </p>
+      )}
+
+      <form className="composer" onSubmit={send}>
+        <input
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          placeholder={tr("chat.placeholder")}
+          maxLength={4000}
+          autoComplete="off"
+          enterKeyHint="send"
+        />
+        <button className="send" type="submit" disabled={!text.trim()} aria-label={tr("chat.send")}>
+          <Icon name="send" />
+        </button>
+      </form>
+    </div>
+  );
+}
