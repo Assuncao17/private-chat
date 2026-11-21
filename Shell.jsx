@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { tr } from "../i18n.js";
+import { tr } from "./i18n.js";
 import Icon from "./Icon.jsx";
 import Profile from "./Profile.jsx";
 import Admin from "./Admin.jsx";

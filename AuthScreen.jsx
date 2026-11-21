@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { supabase } from "../lib/supabase.js";
-import { tr } from "../i18n.js";
+import { supabase } from "./supabase.js";
+import { tr } from "./i18n.js";
 import Logo from "./Logo.jsx";
 
 const inviteFromUrl = new URLSearchParams(window.location.search).get("convite") || "";

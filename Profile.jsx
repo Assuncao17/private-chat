@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { supabase } from "../lib/supabase.js";
-import { tr } from "../i18n.js";
+import { supabase } from "./supabase.js";
+import { tr } from "./i18n.js";
 
 export default function Profile({ profile, setProfile, theme }) {
   const [name, setName] = useState(profile.display_name);

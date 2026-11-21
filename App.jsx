@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
-import { supabase, configured } from "./lib/supabase.js";
+import { supabase, configured } from "./supabase.js";
 import { tr } from "./i18n.js";
 import { useTheme } from "./theme.js";
-import AuthScreen from "./components/AuthScreen.jsx";
-import Shell from "./components/Shell.jsx";
-import Notice from "./components/Notice.jsx";
+import AuthScreen from "./AuthScreen.jsx";
+import Shell from "./Shell.jsx";
+import Notice from "./Notice.jsx";
 
 export default function App() {
   const theme = useTheme();

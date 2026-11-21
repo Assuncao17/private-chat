@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { supabase, MAX_MEMBERS } from "../lib/supabase.js";
-import { tr } from "../i18n.js";
+import { supabase, MAX_MEMBERS } from "./supabase.js";
+import { tr } from "./i18n.js";
 
 function Seats({ used }) {
   return (
