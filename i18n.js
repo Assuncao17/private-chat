@@ -1,0 +1,71 @@
+// Textos da app. Para adicionar alemão no futuro, cria o bloco "de"
+// com as mesmas chaves e muda `locale`.
+const dict = {
+  pt: {
+    "auth.tagline": "Conversas privadas para cinco pessoas.",
+    "auth.tab.login": "Entrar",
+    "auth.tab.register": "Criar conta",
+    "auth.email": "Email",
+    "auth.password": "Palavra-passe",
+    "auth.passwordHint": "Pelo menos 8 caracteres",
+    "auth.name": "O teu nome",
+    "auth.code": "Código de convite",
+    "auth.registerHint": "Só se entra com um convite do administrador. Cada convite funciona uma vez.",
+    "auth.submit.login": "Entrar",
+    "auth.submit.register": "Criar conta",
+    "auth.busy": "A processar…",
+
+    "err.generic": "Algo correu mal. Tenta outra vez.",
+    "err.credentials": "Email ou palavra-passe incorretos.",
+    "err.load": "Não foi possível carregar os dados. Tenta outra vez.",
+    "err.save": "Não foi possível guardar. Tenta outra vez.",
+
+    "setup.title": "Falta ligar ao Supabase",
+    "setup.body": "Cria um ficheiro .env com o endereço do projeto e a chave publicável, e reinicia a app.",
+
+    "revoked.title": "Acesso desativado",
+    "revoked.body": "Esta conta já não tem acesso. Fala com o administrador.",
+
+    "tab.chats": "Conversas",
+    "tab.contacts": "Contactos",
+    "tab.admin": "Admin",
+    "tab.profile": "Perfil",
+
+    "chats.emptyTitle": "Ainda sem conversas",
+    "chats.emptyBody": "As conversas vão aparecer aqui assim que estiverem ativas.",
+    "contacts.emptyTitle": "Contactos",
+    "contacts.emptyBody": "A lista de pessoas do grupo aparece aqui na próxima etapa.",
+
+    "profile.name": "Nome",
+    "profile.save": "Guardar nome",
+    "profile.saved": "Nome guardado",
+    "profile.theme": "Aspeto",
+    "profile.theme.system": "Automático",
+    "profile.theme.light": "Claro",
+    "profile.theme.dark": "Escuro",
+    "profile.signOut": "Terminar sessão",
+
+    "admin.seats": "Lugares",
+    "admin.seatsFree": "livres de 5",
+    "admin.invites": "Convites",
+    "admin.newInvite": "Criar convite",
+    "admin.noSeats": "Não há lugares livres para novos convites.",
+    "admin.copyLink": "Copiar link",
+    "admin.copyCode": "Copiar código",
+    "admin.copied": "Copiado",
+    "admin.revoke": "Revogar",
+    "admin.status.available": "Disponível",
+    "admin.status.used": "Usado",
+    "admin.status.revoked": "Revogado",
+    "admin.noInvites": "Ainda não criaste convites.",
+    "admin.members": "Pessoas",
+    "admin.role.admin": "Administrador",
+    "admin.role.member": "Membro",
+    "admin.status.active": "Ativo",
+    "admin.status.inactive": "Desativado",
+  },
+};
+
+const locale = "pt";
+
+export const tr = (key) => dict[locale][key] ?? key;
