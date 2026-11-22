@@ -20,7 +20,8 @@ export default function Chat({ conv, profile, onBack }) {
 
   useEffect(() => {
     let alive = true;
-    const markRead = () => supabase.rpc("mark_read", { cid: conv.id });
+    // O pedido só é enviado quando se chama .then() (é assim no supabase-js)
+const markRead = () => supabase.rpc("mark_read", { cid: conv.id }).then(() => {});
 
     // Vai buscar o estado atual (mensagens e leituras). Serve no arranque e
     // também quando o telemóvel volta a ficar ativo ou a ligação se refaz.
