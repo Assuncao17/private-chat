@@ -243,3 +243,5 @@ button { cursor: pointer; }
   background: var(--accent); color: var(--accent-ink);
 }
 .send:disabled { opacity: 0.4; }
+
+.receipt { color: var(--muted); font-weight: 600; }

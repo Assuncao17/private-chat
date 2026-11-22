@@ -15,6 +15,7 @@ export default function Chat({ conv, profile, onBack }) {
   const [error, setError] = useState("");
   const [selected, setSelected] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [reads, setReads] = useState({}); // user_id -> última leitura
   const endRef = useRef(null);
 
   useEffect(() => {
@@ -22,7 +23,7 @@ export default function Chat({ conv, profile, onBack }) {
     const markRead = () => supabase.rpc("mark_read", { cid: conv.id });
 
     (async () => {
-      const [m, p] = await Promise.all([
+      const [m, p, r] = await Promise.all([
         supabase
           .from("messages")
           .select(COLS)
@@ -30,11 +31,13 @@ export default function Chat({ conv, profile, onBack }) {
           .order("created_at", { ascending: false })
           .limit(200),
         supabase.from("profiles").select("id, display_name"),
+        supabase.from("conversation_members").select("user_id, last_read_at").eq("conversation_id", conv.id),
       ]);
       if (!alive) return;
       if (m.error) setError(tr("err.load"));
       else setMessages(m.data.reverse());
       if (p.data) setNames(Object.fromEntries(p.data.map((x) => [x.id, x.display_name])));
+      if (r.data) setReads(Object.fromEntries(r.data.map((x) => [x.user_id, x.last_read_at])));
       setLoading(false);
       markRead();
     })();
@@ -48,6 +51,9 @@ export default function Chat({ conv, profile, onBack }) {
       })
       .on("postgres_changes", { event: "UPDATE", schema: "public", table: "messages", filter }, ({ new: row }) => {
         setMessages((cur) => cur.map((x) => (x.id === row.id ? { ...x, ...row } : x)));
+      })
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "conversation_members", filter }, ({ new: row }) => {
+        setReads((cur) => ({ ...cur, [row.user_id]: row.last_read_at }));
       })
       .subscribe();
 
@@ -87,6 +93,17 @@ export default function Chat({ conv, profile, onBack }) {
     setMessages((cur) => cur.map((x) => (x.id === id ? { ...x, deleted_at: when } : x)));
   }
 
+  // Quem já viu a minha última mensagem
+  const others = Object.keys(reads).filter((id) => id !== profile.id);
+  const lastMine = [...messages].reverse().find((m) => m.sender_id === profile.id && !m.deleted_at);
+  function receipt() {
+    if (!lastMine) return "";
+    const seen = others.filter((id) => new Date(reads[id]) >= new Date(lastMine.created_at)).length;
+    if (conv.kind === "direct") return seen > 0 ? tr("chat.seen") : tr("chat.sent");
+    if (seen === 0) return tr("chat.sent");
+    return seen >= others.length ? tr("chat.seenAll") : `${tr("chat.seenBy")} ${seen}/${others.length}`;
+  }
+
   return (
     <div className="shell chat">
       <header className="chat-head">
@@ -117,6 +134,7 @@ export default function Chat({ conv, profile, onBack }) {
               </div>
               <small className="time">
                 {hhmm(m.created_at)}
+                {lastMine && m.id === lastMine.id && <span className="receipt">{receipt()}</span>}
                 {selected === m.id && (
                   <button className="link danger" onClick={() => remove(m.id)}>
                     {tr("chat.delete")}
