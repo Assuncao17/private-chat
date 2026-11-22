@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { supabase } from "./supabase.js";
 import { tr } from "./i18n.js";
+import PushToggle from "./Push.jsx";
 
 export default function Profile({ profile, setProfile, theme }) {
   const [name, setName] = useState(profile.display_name);
@@ -55,6 +56,8 @@ export default function Profile({ profile, setProfile, theme }) {
           ))}
         </div>
       </section>
+
+      <PushToggle />
 
       <button className="btn ghost" onClick={() => supabase.auth.signOut()}>
         {tr("profile.signOut")}
