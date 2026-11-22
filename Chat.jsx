@@ -22,25 +22,33 @@ export default function Chat({ conv, profile, onBack }) {
     let alive = true;
     const markRead = () => supabase.rpc("mark_read", { cid: conv.id });
 
-    (async () => {
-      const [m, p, r] = await Promise.all([
+    // Vai buscar o estado atual (mensagens e leituras). Serve no arranque e
+    // também quando o telemóvel volta a ficar ativo ou a ligação se refaz.
+    async function refresh(first = false) {
+      const [m, r] = await Promise.all([
         supabase
           .from("messages")
           .select(COLS)
           .eq("conversation_id", conv.id)
           .order("created_at", { ascending: false })
           .limit(200),
-        supabase.from("profiles").select("id, display_name"),
         supabase.from("conversation_members").select("user_id, last_read_at").eq("conversation_id", conv.id),
       ]);
       if (!alive) return;
       if (m.error) setError(tr("err.load"));
       else setMessages(m.data.reverse());
-      if (p.data) setNames(Object.fromEntries(p.data.map((x) => [x.id, x.display_name])));
       if (r.data) setReads(Object.fromEntries(r.data.map((x) => [x.user_id, x.last_read_at])));
-      setLoading(false);
+      if (first) setLoading(false);
       markRead();
-    })();
+    }
+
+    supabase
+      .from("profiles")
+      .select("id, display_name")
+      .then(({ data }) => {
+        if (alive && data) setNames(Object.fromEntries(data.map((x) => [x.id, x.display_name])));
+      });
+    refresh(true);
 
     const filter = `conversation_id=eq.${conv.id}`;
     const channel = supabase
@@ -55,10 +63,28 @@ export default function Chat({ conv, profile, onBack }) {
       .on("postgres_changes", { event: "UPDATE", schema: "public", table: "conversation_members", filter }, ({ new: row }) => {
         setReads((cur) => ({ ...cur, [row.user_id]: row.last_read_at }));
       })
-      .subscribe();
+      .subscribe((status) => {
+        if (status === "SUBSCRIBED") refresh();
+      });
+
+    // No iPhone a ligação em tempo real pára quando a app fica em segundo plano.
+    const onVisible = () => {
+      if (document.visibilityState === "visible") refresh();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("focus", onVisible);
+    window.addEventListener("online", onVisible);
+    // Rede de segurança: confere as leituras de vez em quando.
+    const timer = setInterval(() => {
+      if (document.visibilityState === "visible") refresh();
+    }, 15000);
 
     return () => {
       alive = false;
+      clearInterval(timer);
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("focus", onVisible);
+      window.removeEventListener("online", onVisible);
       supabase.removeChannel(channel);
     };
   }, [conv.id]);
