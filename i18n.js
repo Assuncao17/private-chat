@@ -35,6 +35,8 @@ const dict = {
 
     "chats.emptyTitle": "Ainda sem conversas",
     "chats.emptyBody": "Abre um contacto para começar uma conversa.",
+    "search.placeholder": "Pesquisar mensagens",
+    "search.none": "Sem resultados.",
     "chats.noMessages": "Sem mensagens",
     "chat.back": "Voltar",
     "chat.empty": "Ainda sem mensagens. Diz olá!",
@@ -44,6 +46,7 @@ const dict = {
     "chat.attach": "Enviar foto",
     "chat.uploading": "A enviar a foto…",
     "chat.close": "Fechar",
+    "chat.removed": "Utilizador removido",
     "chat.sent": "Enviado",
     "chat.seen": "Visto",
     "chat.seenAll": "Visto por todos",
@@ -88,7 +91,15 @@ const dict = {
     "admin.role.admin": "Administrador",
     "admin.role.member": "Membro",
     "admin.status.active": "Ativo",
-    "admin.status.inactive": "Desativado",
+    "admin.status.inactive": "Acesso revogado",
+    "admin.lastSeen": "Último acesso:",
+    "admin.never": "Ainda não entrou",
+    "admin.userRevoke": "Revogar acesso",
+    "admin.userRestore": "Reativar acesso",
+    "admin.userDelete": "Eliminar pessoa",
+    "admin.confirmRevoke": "Revogar o acesso a {name}? A pessoa deixa de poder entrar e de ver as conversas. O lugar continua ocupado e podes reativá-la quando quiseres.",
+    "admin.confirmRestore": "Reativar o acesso a {name}?",
+    "admin.confirmDelete": "Eliminar {name} de vez? As conversas privadas com esta pessoa são apagadas e as mensagens dela no grupo ficam como \"Utilizador removido\". Não se pode desfazer. O lugar fica livre para um novo convite.",
   },
 };
 

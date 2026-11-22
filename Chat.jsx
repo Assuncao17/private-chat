@@ -179,7 +179,7 @@ export default function Chat({ conv, profile, onBack }) {
           return (
             <div key={m.id} className={`msg ${mine ? "mine" : "theirs"}`}>
               {conv.kind === "group" && !mine && (
-                <small className="sender">{names[m.sender_id] || "—"}</small>
+                <small className="sender">{m.sender_id ? names[m.sender_id] || "—" : tr("chat.removed")}</small>
               )}
               <div
                 className={`bubble ${deleted ? "gone" : ""} ${m.image_path && !deleted ? "has-photo" : ""}`}

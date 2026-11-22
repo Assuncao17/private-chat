@@ -24,6 +24,7 @@ export default function Admin({ profile }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [copied, setCopied] = useState("");
+  const [accounts, setAccounts] = useState({}); // id -> { email, last_sign_in_at }
 
   async function load() {
     const [m, i] = await Promise.all([
@@ -41,9 +42,28 @@ export default function Admin({ profile }) {
     setInvites(i.data);
   }
 
+  async function loadAccounts() {
+    const { data } = await supabase.functions.invoke("admin-users", { body: { action: "list" } });
+    if (data?.users) setAccounts(Object.fromEntries(data.users.map((u) => [u.id, u])));
+  }
+
   useEffect(() => {
     load();
+    loadAccounts();
   }, []);
+
+  // revogar, reativar ou eliminar uma pessoa (feito no servidor)
+  async function manage(action, m) {
+    const key = action === "delete" ? "admin.confirmDelete" : action === "revoke" ? "admin.confirmRevoke" : "admin.confirmRestore";
+    if (!window.confirm(tr(key).replace("{name}", m.display_name || "—"))) return;
+    setBusy(true);
+    setError("");
+    const { error } = await supabase.functions.invoke("admin-users", { body: { action, user_id: m.id } });
+    setBusy(false);
+    if (error) return setError(tr("err.save"));
+    await load();
+    loadAccounts();
+  }
 
   const used = members.length;
   const free = MAX_MEMBERS - used;
@@ -144,20 +164,48 @@ export default function Admin({ profile }) {
       <section className="stack">
         <h2>{tr("admin.members")}</h2>
         <ul className="list">
-          {members.map((m) => (
-            <li key={m.id} className="item row between">
-              <div className="row gap">
-                <span className="avatar">{(m.display_name || "?").slice(0, 1).toUpperCase()}</span>
-                <div>
-                  <div>{m.display_name || "—"}</div>
-                  <small className="muted">{tr(`admin.role.${m.role}`)}</small>
+          {members.map((m) => {
+            const acc = accounts[m.id];
+            const lastSeen = acc?.last_sign_in_at
+              ? `${tr("admin.lastSeen")} ${new Date(acc.last_sign_in_at).toLocaleString("pt-PT", { dateStyle: "short", timeStyle: "short" })}`
+              : tr("admin.never");
+            return (
+              <li key={m.id} className="item stack">
+                <div className="row between">
+                  <div className="row gap">
+                    <span className="avatar">{(m.display_name || "?").slice(0, 1).toUpperCase()}</span>
+                    <div>
+                      <div>{m.display_name || "—"}</div>
+                      <small className="muted">
+                        {tr(`admin.role.${m.role}`)}
+                        {acc?.email ? ` · ${acc.email}` : ""}
+                      </small>
+                    </div>
+                  </div>
+                  <span className={`pill ${m.status === "active" ? "available" : "revoked"}`}>
+                    {m.status === "active" ? tr("admin.status.active") : tr("admin.status.inactive")}
+                  </span>
                 </div>
-              </div>
-              <span className={`pill ${m.status === "active" ? "available" : "revoked"}`}>
-                {m.status === "active" ? tr("admin.status.active") : tr("admin.status.inactive")}
-              </span>
-            </li>
-          ))}
+                {acc && <small className="muted">{lastSeen}</small>}
+                {m.role !== "admin" && (
+                  <div className="row gap">
+                    {m.status === "active" ? (
+                      <button className="btn small ghost" disabled={busy} onClick={() => manage("revoke", m)}>
+                        {tr("admin.userRevoke")}
+                      </button>
+                    ) : (
+                      <button className="btn small" disabled={busy} onClick={() => manage("restore", m)}>
+                        {tr("admin.userRestore")}
+                      </button>
+                    )}
+                    <button className="btn small ghost danger" disabled={busy} onClick={() => manage("delete", m)}>
+                      {tr("admin.userDelete")}
+                    </button>
+                  </div>
+                )}
+              </li>
+            );
+          })}
         </ul>
       </section>
     </div>
