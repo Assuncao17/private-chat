@@ -10,6 +10,13 @@ const paths = {
   ),
   back: <path d="M15 18l-6-6 6-6" />,
   send: <path d="M22 2L11 13M22 2l-7 20-4-9-9-4z" />,
+  image: (
+    <>
+      <rect x="3" y="3" width="18" height="18" rx="2" />
+      <circle cx="8.5" cy="8.5" r="1.5" />
+      <path d="M21 15l-5-5L5 21" />
+    </>
+  ),
   shield: <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />,
   user: (
     <>

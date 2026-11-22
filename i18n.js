@@ -19,6 +19,7 @@ const dict = {
     "err.credentials": "Email ou palavra-passe incorretos.",
     "err.load": "Não foi possível carregar os dados. Tenta outra vez.",
     "err.save": "Não foi possível guardar. Tenta outra vez.",
+    "err.photo": "Não foi possível enviar a foto. Tenta outra vez.",
     "err.send": "Não foi possível enviar a mensagem. Tenta outra vez.",
 
     "setup.title": "Falta ligar ao Supabase",
@@ -40,6 +41,9 @@ const dict = {
     "chat.placeholder": "Escreve uma mensagem",
     "chat.send": "Enviar",
     "chat.delete": "Eliminar",
+    "chat.attach": "Enviar foto",
+    "chat.uploading": "A enviar a foto…",
+    "chat.close": "Fechar",
     "chat.sent": "Enviado",
     "chat.seen": "Visto",
     "chat.seenAll": "Visto por todos",

@@ -2,8 +2,10 @@ import { useEffect, useRef, useState } from "react";
 import { supabase } from "./supabase.js";
 import { tr } from "./i18n.js";
 import Icon from "./Icon.jsx";
+import Photo from "./Photo.jsx";
+import { compressImage, newId } from "./image.js";
 
-const COLS = "id, sender_id, body, created_at, deleted_at";
+const COLS = "id, sender_id, body, image_path, created_at, deleted_at";
 
 const hhmm = (iso) =>
   new Date(iso).toLocaleTimeString("pt-PT", { hour: "2-digit", minute: "2-digit" });
@@ -16,12 +18,14 @@ export default function Chat({ conv, profile, onBack }) {
   const [selected, setSelected] = useState(null);
   const [loading, setLoading] = useState(true);
   const [reads, setReads] = useState({}); // user_id -> última leitura
+  const [uploading, setUploading] = useState(false);
+  const [viewer, setViewer] = useState(null); // foto aberta em ecrã inteiro
   const endRef = useRef(null);
 
   useEffect(() => {
     let alive = true;
     // O pedido só é enviado quando se chama .then() (é assim no supabase-js)
-const markRead = () => supabase.rpc("mark_read", { cid: conv.id }).then(() => {});
+    const markRead = () => supabase.rpc("mark_read", { cid: conv.id }).then(() => {});
 
     // Vai buscar o estado atual (mensagens e leituras). Serve no arranque e
     // também quando o telemóvel volta a ficar ativo ou a ligação se refaz.
@@ -112,6 +116,30 @@ const markRead = () => supabase.rpc("mark_read", { cid: conv.id }).then(() => {}
     setMessages((cur) => (cur.some((x) => x.id === data.id) ? cur : [...cur, data]));
   }
 
+  async function onPick(e) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    setError("");
+    setUploading(true);
+    try {
+      const blob = await compressImage(file);
+      const path = `${conv.id}/${newId()}.jpg`;
+      const up = await supabase.storage.from("chat-media").upload(path, blob, { contentType: "image/jpeg" });
+      if (up.error) throw up.error;
+      const { data, error } = await supabase
+        .from("messages")
+        .insert({ conversation_id: conv.id, sender_id: profile.id, body: "", image_path: path })
+        .select(COLS)
+        .single();
+      if (error) throw error;
+      setMessages((cur) => (cur.some((x) => x.id === data.id) ? cur : [...cur, data]));
+    } catch {
+      setError(tr("err.photo"));
+    }
+    setUploading(false);
+  }
+
   async function remove(id) {
     setSelected(null);
     const when = new Date().toISOString();
@@ -154,12 +182,22 @@ const markRead = () => supabase.rpc("mark_read", { cid: conv.id }).then(() => {}
                 <small className="sender">{names[m.sender_id] || "—"}</small>
               )}
               <div
-                className={`bubble ${deleted ? "gone" : ""}`}
+                className={`bubble ${deleted ? "gone" : ""} ${m.image_path && !deleted ? "has-photo" : ""}`}
                 onClick={() => mine && !deleted && setSelected(selected === m.id ? null : m.id)}
               >
-                {deleted ? tr("chat.deleted") : m.body}
+                {deleted ? (
+                  tr("chat.deleted")
+                ) : (
+                  <>
+                    {m.image_path && <Photo path={m.image_path} onOpen={setViewer} />}
+                    {m.body && <span className={m.image_path ? "caption" : ""}>{m.body}</span>}
+                  </>
+                )}
               </div>
-              <small className="time">
+              <small
+                className="time"
+                onClick={() => mine && !deleted && setSelected(selected === m.id ? null : m.id)}
+              >
                 {hhmm(m.created_at)}
                 {lastMine && m.id === lastMine.id && <span className="receipt">{receipt()}</span>}
                 {selected === m.id && (
@@ -180,7 +218,22 @@ const markRead = () => supabase.rpc("mark_read", { cid: conv.id }).then(() => {}
         </p>
       )}
 
+      {uploading && <p className="hint chat-error">{tr("chat.uploading")}</p>}
+
+      {viewer && (
+        <div className="viewer" onClick={() => setViewer(null)}>
+          <img src={viewer} alt="Foto" />
+          <button className="viewer-close" aria-label={tr("chat.close")}>
+            ✕
+          </button>
+        </div>
+      )}
+
       <form className="composer" onSubmit={send}>
+        <label className={`attach ${uploading ? "off" : ""}`} aria-label={tr("chat.attach")}>
+          <input type="file" accept="image/*" onChange={onPick} disabled={uploading} />
+          <Icon name="image" />
+        </label>
         <input
           value={text}
           onChange={(e) => setText(e.target.value)}
